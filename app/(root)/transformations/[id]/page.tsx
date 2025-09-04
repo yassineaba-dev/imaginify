@@ -10,16 +10,18 @@ import { getImageById } from "@/lib/actions/image.actions";
 import { getImageSize } from "@/lib/utils";
 
 const ImageDetails = async ({ params: { id } }: SearchParamProps) => {
-  const { sessionClaims } = auth();
-  const userId = sessionClaims?.userId as string;
+  const { userId } = auth();
 
   const image = await getImageById(id);
+  if (!image) {
+    return <p>Image not found.</p>;
+  }
 
   return (
     <>
       <Header title={image.title} />
 
-      <section className="mt-5 flex flex-wrap gap-4">
+     <section className="mt-5 flex flex-wrap gap-4">
         <div className="p-14-medium md:p-16-medium flex gap-2">
           <p className="text-dark-600">Transformation:</p>
           <p className=" capitalize text-purple-400">
@@ -84,20 +86,19 @@ const ImageDetails = async ({ params: { id } }: SearchParamProps) => {
           />
         </div>
 
-        {userId === image.author._id && (
-          <div className="mt-4 space-y-4">
-            <Button asChild type="button" className="submit-button capitalize">
-              <Link href={`/transformations/${image._id}/update`}>
-                Update Image
-              </Link>
-            </Button>
-
-            <DeleteConfirmation imageId={image._id} />
-          </div>
-        )}
-      </section>
+      {userId && userId === image.author._id && (
+        <div className="mt-4 space-y-4">
+          <Button asChild type="button" className="submit-button capitalize">
+            <Link href={`/transformations/${image._id}/update`}>
+              Update Image
+            </Link>
+          </Button>
+          <DeleteConfirmation imageId={image._id} />
+        </div>
+      )}
     </>
   );
 };
 
 export default ImageDetails;
+
