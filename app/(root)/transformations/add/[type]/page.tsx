@@ -4,43 +4,39 @@ import { redirect } from "next/navigation";
 import { Header } from "@/components/shared/Header";
 import { TransformationForm } from "@/components/shared/TransformationForm";
 import { transformationTypes } from "@/constants";
-import { getImageById } from "@/lib/actions/image.actions";
-import { getUserById } from "@/lib/actions/user.actions";
+import { getUserById, createUser } from "@/lib/actions/user.actions";
 
-const UpdateImage = async ({ params: { id } }: SearchParamProps) => {
+const AddImage = async ({ params: { type } }: SearchParamProps) => {
   const { userId } = auth();
 
   if (!userId) redirect("/sign-in");
 
-  const user = await getUserById(userId);
+  let user = await getUserById(userId);
+
   if (!user) {
-    console.error("No DB user found for Clerk userId:", userId);
-    redirect("/sign-in"); // or redirect to onboarding
+    // 👇 create a new user in your DB if not found
+    user = await createUser({
+      clerkId: userId,
+      creditBalance: 10, // starting credits
+    });
   }
 
-  const image = await getImageById(id);
-  if (!image) {
-    redirect("/404"); // or show error
-  }
-
-  const transformation =
-    transformationTypes[image.transformationType as TransformationTypeKey];
+  const transformation = transformationTypes[type];
+  if (!transformation) redirect("/404");
 
   return (
     <>
       <Header title={transformation.title} subTitle={transformation.subTitle} />
       <section className="mt-10">
         <TransformationForm
-          action="Update"
+          action="Add"
           userId={user._id}
-          type={image.transformationType as TransformationTypeKey}
+          type={transformation.type as TransformationTypeKey}
           creditBalance={user.creditBalance}
-          config={image.config}
-          data={image}
         />
       </section>
     </>
   );
 };
 
-export default UpdateImage;
+export default AddImage;
