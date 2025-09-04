@@ -12,12 +12,19 @@ const AddImage = async ({ params: { type } }: SearchParamProps) => {
   if (!userId) redirect("/sign-in");
 
   const user = await getUserById(userId);
+  if (!user) {
+    console.error("No DB user found for Clerk userId:", userId);
+    redirect("/sign-in"); // or to onboarding
+  }
+
   const transformation = transformationTypes[type];
+  if (!transformation) {
+    redirect("/404");
+  }
 
   return (
     <>
       <Header title={transformation.title} subTitle={transformation.subTitle} />
-
       <section className="mt-10">
         <TransformationForm
           action="Add"
